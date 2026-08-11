@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ripeti per capitoli</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+:root{
+  --bg-deep:#1B2E24;
+  --bg-panel:#213827;
+  --bg-panel-2:#26402C;
+  --chalk-white:#F1EDE4;
+  --chalk-yellow:#F2C94C;
+  --chalk-coral:#E8877A;
+  --chalk-dust:#8FA998;
+  --border-dust: rgba(241,237,228,0.14);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% -10%, rgba(255,255,255,0.05), transparent 40%),
+    radial-gradient(ellipse at 90% 110%, rgba(255,255,255,0.04), transparent 45%),
+    var(--bg-deep);
+  font-family:'IBM Plex Sans', sans-serif;
+  color:var(--chalk-white);
+  display:flex;
+  justify-content:center;
+  padding:24px 16px 60px;
+}
+.app{width:100%; max-width:460px;}
+.hidden{ display:none !important; }
+
+header{ text-align:center; margin-bottom:18px; }
+header .eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--chalk-dust); margin-bottom:6px;
+}
+header h1{
+  font-family:'Caveat', cursive; font-weight:700; font-size:40px;
+  margin:0; color:var(--chalk-white); line-height:1;
+}
+
+button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
+
+.panel{
+  background:var(--bg-panel);
+  border:1px solid var(--border-dust);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:14px;
+}
+
+/* --- overall progress --- */
+.overall{ text-align:center; }
+.overall .pct{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:42px; font-weight:500; color:var(--chalk-yellow);
+  line-height:1;
+}
+.overall .sub{ color:var(--chalk-dust); font-size:12px; margin-top:6px; }
+.bar-track{
+  width:100%; height:10px; border-radius:6px;
+  background:var(--bg-panel-2); border:1px solid var(--border-dust);
+  margin-top:12px; overflow:hidden;
+}
+.bar-fill{
+  height:100%; background:var(--chalk-yellow); border-radius:6px;
+  transition:width .5s ease; width:0%;
+}
+
+/* --- chapter list --- */
+.chapter-card{
+  background:var(--bg-panel-2);
+  border:1px solid var(--border-dust);
+  border-radius:12px;
+  padding:13px 14px;
+  margin-bottom:10px;
+}
+.chapter-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.chapter-title{ font-size:15px; font-weight:600; color:var(--chalk-white); }
+.chapter-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk-dust); margin-top:2px; }
+.chapter-score{ font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--chalk-yellow); white-space:nowrap; }
+.chapter-bar-track{ width:100%; height:6px; border-radius:4px; background:var(--bg-deep); margin-top:9px; overflow:hidden; }
+.chapter-bar-fill{ height:100%; background:var(--chalk-yellow); border-radius:4px; transition:width .4s ease; }
+.chapter-actions{ display:flex; gap:14px; margin-top:10px; }
+.icon-btn{
+  background:none; display:flex; align-items:center; gap:5px;
+  font-size:12px; color:var(--chalk-dust); padding:2px 0;
+}
+.icon-btn svg{ width:14px; height:14px; fill:var(--chalk-dust); }
+.icon-btn.danger{ color:var(--chalk-coral); }
+.icon-btn.danger svg{ fill:var(--chalk-coral); }
+.icon-btn.primary{ color:var(--chalk-yellow); }
+.icon-btn.primary svg{ fill:var(--chalk-yellow); }
+.confirm-row{ display:flex; gap:10px; align-items:center; font-size:12px; color:var(--chalk-coral); margin-top:10px; }
+.confirm-row button{ background:none; color:var(--chalk-white); text-decoration:underline; font-size:12px; }
+
+.empty-state{ text-align:center; color:var(--chalk-dust); font-size:13px; padding:18px 8px; }
+
+.btn-primary{
+  width:100%; background:var(--chalk-yellow); color:#26221A; font-weight:600;
+  font-size:15px; padding:13px; border-radius:10px;
+}
+.btn-primary:active{ transform:scale(.98); }
+.btn-ghost{
+  background:transparent; border:1px solid var(--border-dust); color:var(--chalk-dust);
+  font-size:13px; padding:10px 14px; border-radius:8px;
+}
+
+/* --- form --- */
+label.field-label{
+  display:block; font-family:'IBM Plex Mono', monospace; font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--chalk-dust); margin:14px 0 8px;
+}
+label.field-label:first-child{ margin-top:0; }
+input[type=text], input[type=number], textarea{
+  width:100%; background:var(--bg-panel-2); border:1px dashed var(--border-dust);
+  border-radius:10px; color:var(--chalk-white); font-family:'IBM Plex Sans', sans-serif;
+  font-size:15px; padding:11px 12px;
+}
+textarea{ min-height:140px; line-height:1.5; resize:vertical; }
+input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
+.form-actions{ display:flex; gap:10px; margin-top:16px; }
+.form-actions button{ flex:1; }
+
+/* --- practice --- */
+.stats-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+.score{ font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:500; color:var(--chalk-yellow); }
+.score-label{ font-size:11px; color:var(--chalk-dust); letter-spacing:.08em; text-transform:uppercase; }
+.reference-text{ font-size:16px; line-height:2; }
+.word{ color:var(--chalk-dust); transition:color .3s ease; }
+.word.covered{
+  color:var(--chalk-yellow); text-decoration:underline; text-decoration-style:wavy;
+  text-decoration-color:var(--chalk-yellow); text-decoration-thickness:2px; text-underline-offset:3px;
+  animation:chalkPop .45s ease;
+}
+@keyframes chalkPop{ from{ opacity:.25; } to{ opacity:1; } }
+
+.mic-area{ display:flex; flex-direction:column; align-items:center; margin:20px 0 10px; }
+.mic-btn{
+  width:78px; height:78px; border-radius:50%; background:var(--bg-panel-2);
+  border:2px solid var(--chalk-dust); display:flex; align-items:center; justify-content:center; position:relative;
+}
+.mic-btn svg{ width:28px; height:28px; fill:var(--chalk-white); }
+.mic-btn.listening{ border-color:var(--chalk-coral); background:rgba(232,135,122,0.12); }
+.mic-btn.listening svg{ fill:var(--chalk-coral); }
+.mic-btn.listening::before, .mic-btn.listening::after{
+  content:''; position:absolute; inset:0; border-radius:50%; border:2px solid var(--chalk-coral);
+  opacity:0; animation:ring 1.8s ease-out infinite;
+}
+.mic-btn.listening::after{ animation-delay:.6s; }
+@keyframes ring{ 0%{ transform:scale(1); opacity:.6; } 100%{ transform:scale(1.7); opacity:0; } }
+.mic-hint{ margin-top:10px; font-size:12px; color:var(--chalk-dust); }
+.transcript-box{
+  margin-top:14px; min-height:44px; font-size:13px; color:var(--chalk-dust); font-style:italic;
+  border-top:1px dashed var(--border-dust); padding-top:10px;
+}
+.chip-section h3{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--chalk-dust); margin:0 0 10px;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ font-size:13px; padding:6px 11px; border-radius:20px; border:1px solid var(--chalk-coral); color:var(--chalk-coral); }
+.chip.done{ border-color:var(--chalk-yellow); color:var(--chalk-yellow); text-decoration:line-through; opacity:.55; }
+.actions-row{ display:flex; gap:10px; margin-top:16px; }
+.actions-row button{ flex:1; }
+.notice{
+  background:rgba(232,135,122,0.1); border:1px solid var(--chalk-coral); color:var(--chalk-coral);
+  font-size:13px; padding:12px; border-radius:10px; margin-bottom:14px;
+}
+.back-link{
+  display:inline-flex; align-items:center; gap:6px; color:var(--chalk-dust); font-size:13px;
+  margin-bottom:12px; background:none;
+}
+.back-link svg{ width:14px; height:14px; fill:var(--chalk-dust); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="eyebrow">Studio a voce alta</div>
+    <h1>Ripeti per capitoli</h1>
+  </header>
+
+  <div id="unsupported" class="notice hidden">
+    Il riconoscimento vocale non è supportato da questo browser. Prova ad aprire questa pagina con Chrome (Android o desktop).
+  </div>
+
+  <!-- HOME VIEW -->
+  <div id="homeView">
+    <div class="panel overall">
+      <div class="pct"><span id="overallPct">0</span>%</div>
+      <div class="sub" id="overallSub">0 di 0 pagine</div>
+      <div class="bar-track"><div class="bar-fill" id="overallBar"></div></div>
+    </div>
+
+    <div id="chapterList"></div>
+
+    <button class="btn-primary" id="addChapterBtn">+ Aggiungi capitolo</button>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div id="formView" class="hidden">
+    <button class="back-link" id="formBackBtn">
+      <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8 1.4-1.4L9.8 12l6.6-6.6z"/></svg> Indietro
+    </button>
+    <div class="panel">
+      <label class="field-label" for="chapTitle">Titolo capitolo</label>
+      <input type="text" id="chapTitle" placeholder="Es. Capitolo 1 – La cellula">
+      <label class="field-label" for="chapPages">Numero di pagine</label>
+      <input type="number" id="chapPages" min="1" placeholder="Es. 12">
+      <label class="field-label" for="chapText">Testo o appunti dell'argomento</label>
+      <textarea id="chapText" placeholder="Incolla qui gli appunti del capitolo..."></textarea>
+      <label class="field-label" for="chapPdf">Oppure carica un PDF</label>
+      <input type="file" id="chapPdf" accept="application/pdf">
+      <div id="pdfStatus" style="font-size:12px;color:var(--chalk-dust);margin-top:6px;"></div>
+      <div class="form-actions">
+        <button class="btn-ghost" id="formCancelBtn">Annulla</button>
+        <button class="btn-primary" id="formSaveBtn">Salva capitolo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRACTICE VIEW -->
+  <div id="practiceView" class="hidden">
+    <button class="back-link" id="practiceBackBtn">
+      <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8 1.4-1.4L9.8 12l6.6-6.6z"/></svg> Torna ai capitoli
+    </button>
+    <div class="panel">
+      <div class="stats-row">
+        <div>
+          <div class="score"><span id="scoreValue">0</span>%</div>
+          <div class="score-label"><span id="coveredCount">0</span>/<span id="totalCount">0</span> concetti detti in questa sessione</div>
+        </div>
+      </div>
+      <div class="reference-text" id="referenceText"></div>
+    </div>
+
+    <div class="panel">
+      <div class="mic-area">
+        <button class="mic-btn" id="micBtn" aria-label="Avvia ascolto">
+          <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z"/><path d="M19 11a1 1 0 00-2 0 5 5 0 01-10 0 1 1 0 00-2 0 7 7 0 006 6.92V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-2.08A7 7 0 0019 11z"/></svg>
+        </button>
+        <div class="mic-hint" id="micHint">Tocca per iniziare a parlare</div>
+      </div>
+      <div class="transcript-box" id="transcriptBox">La tua voce apparirà qui mentre parli...</div>
+    </div>
+
+    <div class="panel chip-section">
+      <h3>Concetti da coprire</h3>
+      <div class="chips" id="chipsRow"></div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-ghost" id="retryBtn">Riprova da capo</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const stopwordsList = ["il","lo","la","i","gli","le","un","uno","una","di","del","dello","della","dei","degli","delle","a","al","allo","alla","ai","agli","alle","da","dal","dallo","dalla","dai","dagli","dalle","in","nel","nello","nella","nei","negli","nelle","con","su","sul","sullo","sulla","sui","sugli","sulle","per","tra","fra","e","ed","o","od","ma","se","che","chi","cui","non","piu","anche","come","quando","dove","perche","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","stato","stata","stati","state","ho","hai","ha","abbiamo","avete","hanno","ci","si","vi","mi","ti","lui","lei","loro","noi","voi","io","tu","suo","sua","suoi","sue","mio","mia","miei","mie","tuo","tua","tuoi","tue","nostro","nostra","nostri","nostre","vostro","vostra","vostri","vostre","cioe","quindi","dunque","allora","poi","gia","ancora","sempre","mai","molto","poco","tanto","tutto","tutti","tutta","tutte","altro","altra","altri","altre","stesso","stessa","stessi","stesse","sono","era","erano","essi","esse","cosa","cose"];
+const stopwords = new Set(stopwordsList);
+
+function normalize(w){
+  return w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z']/g,'');
+}
+function uid(){ return 'c'+Date.now()+Math.random().toString(36).slice(2,7); }
+
+const STORAGE_KEY = 'ripeti-capitoli-v1';
+let storageAvailable = true;
+
+function saveChapters(){
+  if(!storageAvailable) return;
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chapters));
+  }catch(e){
+    storageAvailable = false;
+  }
+}
+
+function loadChapters(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) chapters = JSON.parse(raw);
+  }catch(e){
+    storageAvailable = false;
+  }
+}
+
+// --- state ---
+let chapters = []; // {id, title, pages, text, score, keywords:[{norm,display}]}
+let currentChapterId = null; // being practiced
+let editingChapterId = null; // being edited in form, null = new
+let confirmDeleteId = null;
+
+let coveredSet = new Set();
+let finalTranscript = '';
+let recognition = null;
+let listening = false;
+
+// --- elements ---
+const homeView = document.getElementById('homeView');
+const formView = document.getElementById('formView');
+const practiceView = document.getElementById('practiceView');
+const chapterList = document.getElementById('chapterList');
+const overallPct = document.getElementById('overallPct');
+const overallSub = document.getElementById('overallSub');
+const overallBar = document.getElementById('overallBar');
+const chapTitle = document.getElementById('chapTitle');
+const chapPages = document.getElementById('chapPages');
+const chapText = document.getElementById('chapText');
+const referenceTextEl = document.getElementById('referenceText');
+const chipsRow = document.getElementById('chipsRow');
+const scoreValue = document.getElementById('scoreValue');
+const coveredCountEl = document.getElementById('coveredCount');
+const totalCountEl = document.getElementById('totalCount');
+const transcriptBox = document.getElementById('transcriptBox');
+const micBtn = document.getElementById('micBtn');
+const micHint = document.getElementById('micHint');
+const unsupportedNotice = document.getElementById('unsupported');
+
+function showView(view){
+  homeView.classList.add('hidden');
+  formView.classList.add('hidden');
+  practiceView.classList.add('hidden');
+  view.classList.remove('hidden');
+}
+
+// --- keyword extraction ---
+function extractKeywords(text){
+  const tokens = text.split(/[^A-Za-zÀ-ÿ']+/).filter(Boolean);
+  const seen = new Map();
+  tokens.forEach(t=>{
+    const norm = normalize(t);
+    if(norm.length>=4 && !stopwords.has(norm) && !seen.has(norm)){
+      seen.set(norm, t);
+    }
+  });
+  return Array.from(seen.entries()).slice(0,30).map(([norm, display])=>({norm, display}));
+}
+
+// --- home / overall progress ---
+function renderHome(){
+  const totalPages = chapters.reduce((s,c)=>s+c.pages,0);
+  const weightedDone = chapters.reduce((s,c)=>s+c.pages*(c.score/100),0);
+  const pct = totalPages>0 ? Math.round(weightedDone/totalPages*100) : 0;
+  overallPct.textContent = pct;
+  overallSub.textContent = totalPages>0
+    ? `${Math.round(weightedDone)} di ${totalPages} pagine (proporzionale)`
+    : 'Aggiungi il primo capitolo per iniziare';
+  overallBar.style.width = pct+'%';
+
+  if(chapters.length===0){
+    chapterList.innerHTML = '<div class="empty-state">Nessun capitolo ancora. Aggiungine uno per cominciare a ripetere.</div>';
+    return;
+  }
+
+  chapterList.innerHTML = chapters.map(c=>{
+    const confirming = confirmDeleteId===c.id;
+    return `
+    <div class="chapter-card">
+      <div class="chapter-top">
+        <div>
+          <div class="chapter-title">${escapeHtml(c.title)}</div>
+          <div class="chapter-meta">${c.pages} pagine</div>
+        </div>
+        <div class="chapter-score">${Math.round(c.score)}%</div>
+      </div>
+      <div class="chapter-bar-track"><div class="chapter-bar-fill" style="width:${c.score}%"></div></div>
+      ${confirming ? `
+        <div class="confirm-row">
+          Eliminare questo capitolo?
+          <button data-action="delete-confirm" data-id="${c.id}">Sì, elimina</button>
+          <button data-action="delete-cancel" data-id="${c.id}">Annulla</button>
+        </div>
+      ` : `
+        <div class="chapter-actions">
+          <button class="icon-btn primary" data-action="practice" data-id="${c.id}">
+            <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z"/><path d="M19 11a1 1 0 00-2 0 5 5 0 01-10 0 1 1 0 00-2 0 7 7 0 006 6.92V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-2.08A7 7 0 0019 11z"/></svg>
+            Ripeti
+          </button>
+          <button class="icon-btn" data-action="edit" data-id="${c.id}">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            Modifica
+          </button>
+          <button class="icon-btn danger" data-action="delete" data-id="${c.id}">
+            <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2H8l1-2z"/></svg>
+            Elimina
+          </button>
+        </div>
+      `}
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+chapterList.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if(action==='practice'){ openPractice(id); }
+  else if(action==='edit'){ openForm(id); }
+  else if(action==='delete'){ confirmDeleteId = id; renderHome(); }
+  else if(action==='delete-cancel'){ confirmDeleteId = null; renderHome(); }
+  else if(action==='delete-confirm'){
+    chapters = chapters.filter(c=>c.id!==id);
+    confirmDeleteId = null;
+    saveChapters();
+    renderHome();
+  }
+});
+
+// --- form ---
+function openForm(id){
+  editingChapterId = id || null;
+  document.getElementById('chapPdf').value = '';
+  document.getElementById('pdfStatus').textContent = '';
+  if(id){
+    const c = chapters.find(c=>c.id===id);
+    chapTitle.value = c.title;
+    chapPages.value = c.pages;
+    chapText.value = c.text;
+  } else {
+    chapTitle.value = '';
+    chapPages.value = '';
+    chapText.value = '';
+  }
+  showView(formView);
+}
+
+document.getElementById('addChapterBtn').addEventListener('click', ()=>openForm(null));
+document.getElementById('formBackBtn').addEventListener('click', ()=>{ showView(homeView); renderHome(); });
+document.getElementById('formCancelBtn').addEventListener('click', ()=>{ showView(homeView); renderHome(); });
+
+document.getElementById('chapPdf').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  const pdfStatus = document.getElementById('pdfStatus');
+  if(!file) return;
+  pdfStatus.textContent = 'Estrazione testo in corso...';
+  try{
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let text = '';
+    for(let i=1; i<=pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it=>it.str).join(' ') + '\n\n';
+    }
+    chapText.value = text.trim();
+    if(!chapPages.value) chapPages.value = pdf.numPages;
+    pdfStatus.textContent = `Estratte ${pdf.numPages} pagine dal PDF. Puoi ancora modificare il testo qui sopra.`;
+  }catch(err){
+    pdfStatus.textContent = 'Errore nell\'estrazione del PDF. Prova a incollare il testo manualmente.';
+  }
+});
+
+document.getElementById('formSaveBtn').addEventListener('click', ()=>{
+  const title = chapTitle.value.trim();
+  const pages = parseInt(chapPages.value, 10);
+  const text = chapText.value.trim();
+  if(!title || !pages || pages<1 || !text) return;
+
+  if(editingChapterId){
+    const c = chapters.find(c=>c.id===editingChapterId);
+    c.title = title; c.pages = pages; c.text = text;
+    c.keywords = extractKeywords(text);
+  } else {
+    chapters.push({ id: uid(), title, pages, text, score:0, keywords: extractKeywords(text) });
+  }
+  saveChapters();
+  showView(homeView);
+  renderHome();
+});
+
+// --- practice ---
+function openPractice(id){
+  currentChapterId = id;
+  const c = chapters.find(c=>c.id===id);
+  coveredSet = new Set();
+  finalTranscript = '';
+  renderReferenceText(c.text, c.keywords);
+  renderChips(c.keywords);
+  updateStats(c);
+  transcriptBox.textContent = 'La tua voce apparirà qui mentre parli...';
+  showView(practiceView);
+}
+
+function renderReferenceText(text){
+  const parts = text.split(/(\s+)/);
+  referenceTextEl.innerHTML = parts.map(p=>{
+    if(/^\s+$/.test(p) || p==='') return p;
+    const norm = normalize(p);
+    return `<span class="word" data-norm="${norm}">${p}</span>`;
+  }).join('');
+}
+
+function renderChips(keywords){
+  chipsRow.innerHTML = keywords.map(k=>{
+    const done = coveredSet.has(k.norm);
+    return `<span class="chip ${done?'done':''}">${k.display}</span>`;
+  }).join('');
+}
+
+function updateStats(c){
+  scoreValue.textContent = Math.round(c.score);
+  coveredCountEl.textContent = coveredSet.size;
+  totalCountEl.textContent = c.keywords.length;
+}
+
+function updateMatches(transcriptSoFar){
+  const c = chapters.find(c=>c.id===currentChapterId);
+  if(!c) return;
+  const normTranscript = ' ' + normalize(transcriptSoFar.replace(/[^A-Za-zÀ-ÿ' ]/g,' ')) + ' ';
+  c.keywords.forEach(k=>{
+    if(normTranscript.includes(' '+k.norm) || normTranscript.includes(k.norm+' ')){
+      coveredSet.add(k.norm);
+    }
+  });
+  document.querySelectorAll('.word').forEach(span=>{
+    if(coveredSet.has(span.dataset.norm)) span.classList.add('covered');
+  });
+  renderChips(c.keywords);
+  const sessionScore = c.keywords.length ? (coveredSet.size/c.keywords.length*100) : 0;
+  c.score = Math.max(c.score, sessionScore); // il capitolo tiene il punteggio migliore ottenuto
+  saveChapters();
+  updateStats(c);
+}
+
+document.getElementById('practiceBackBtn').addEventListener('click', ()=>{
+  stopListening();
+  showView(homeView);
+  renderHome();
+});
+
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  stopListening();
+  const c = chapters.find(c=>c.id===currentChapterId);
+  coveredSet = new Set();
+  finalTranscript = '';
+  document.querySelectorAll('.word.covered').forEach(s=>s.classList.remove('covered'));
+  renderChips(c.keywords);
+  updateStats(c);
+  transcriptBox.textContent = 'La tua voce apparirà qui mentre parli...';
+});
+
+// --- speech recognition ---
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function setupRecognition(){
+  recognition = new SpeechRecognition();
+  recognition.lang = 'it-IT';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (event)=>{
+    let interim = '';
+    for(let i=event.resultIndex; i<event.results.length; i++){
+      const res = event.results[i];
+      if(res.isFinal){ finalTranscript += res[0].transcript + ' '; }
+      else { interim += res[0].transcript; }
+    }
+    transcriptBox.textContent = (finalTranscript + interim).trim() || 'La tua voce apparirà qui mentre parli...';
+    updateMatches(finalTranscript + ' ' + interim);
+  };
+
+  recognition.onerror = (e)=>{
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      micHint.textContent = 'Permesso microfono negato.';
+      stopListening();
+    }
+  };
+
+  recognition.onend = ()=>{
+    if(listening){ try{ recognition.start(); }catch(e){} }
+  };
+}
+
+function startListening(){
+  if(!recognition) setupRecognition();
+  listening = true;
+  micBtn.classList.add('listening');
+  micHint.textContent = 'Ti sto ascoltando...';
+  try{ recognition.start(); }catch(e){}
+}
+
+function stopListening(){
+  listening = false;
+  micBtn.classList.remove('listening');
+  micHint.textContent = 'Tocca per iniziare a parlare';
+  if(recognition){ try{ recognition.stop(); }catch(e){} }
+}
+
+micBtn.addEventListener('click', ()=>{
+  if(!SpeechRecognition) return;
+  if(listening){ stopListening(); } else { startListening(); }
+});
+
+if(!SpeechRecognition){
+  unsupportedNotice.classList.remove('hidden');
+  micBtn.disabled = true;
+}
+
+loadChapters();
+renderHome();
+</script>
+</body>
+</html>
