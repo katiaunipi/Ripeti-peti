@@ -629,21 +629,51 @@ document.getElementById('chapterFormCancelBtn').addEventListener('click', ()=>{ 
 chapPdf.addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  pdfStatus.textContent = 'Estrazione testo in corso...';
+  chapPdf.disabled = true;
+  pdfStatus.textContent = 'Apertura del PDF...';
   try{
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+
+    // 1. Prova prima l'estrazione del testo "vero" (PDF digitali)
+    pdfStatus.textContent = 'Lettura del testo in corso...';
     let text = '';
     for(let i=1; i<=pdf.numPages; i++){
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
       text += content.items.map(it=>it.str).join(' ') + '\n\n';
     }
+
+    // 2. Se il testo trovato è troppo scarso, il PDF è probabilmente una scansione/foto: passa all'OCR
+    const meaningfulChars = text.replace(/\s/g,'').length;
+    if(meaningfulChars < pdf.numPages * 25){
+      text = '';
+      for(let i=1; i<=pdf.numPages; i++){
+        pdfStatus.textContent = `PDF scansionato: riconoscimento del testo in corso... pagina ${i} di ${pdf.numPages} (può richiedere qualche secondo a pagina)`;
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const { data } = await Tesseract.recognize(canvas, 'ita');
+        text += data.text + '\n\n';
+      }
+    }
+
     chapText.value = text.trim();
     if(!chapPages.value) chapPages.value = pdf.numPages;
-    pdfStatus.textContent = `Estratte ${pdf.numPages} pagine dal PDF. Puoi ancora modificare il testo qui sopra.`;
+
+    if(chapText.value.length < 10){
+      pdfStatus.textContent = "Non sono riuscita a leggere testo da questo PDF (scansione poco leggibile). Prova a incollare il testo a mano.";
+    } else {
+      pdfStatus.textContent = `Testo estratto da ${pdf.numPages} pagine. Controllalo e correggilo se serve prima di salvare.`;
+    }
   }catch(err){
-    pdfStatus.textContent = "Errore nell'estrazione del PDF. Prova a incollare il testo manualmente.";
+    pdfStatus.textContent = "Errore nella lettura del PDF. Prova a incollare il testo manualmente.";
+  }finally{
+    chapPdf.disabled = false;
   }
 });
 
