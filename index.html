@@ -110,12 +110,15 @@ button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
 .empty-state{ text-align:center; color:var(--chalk-dust); font-size:13px; padding:18px 8px; }
 
 .btn-primary{
-  width:100%; background:var(--chalk-yellow); color:#26221A; font-weight:600;
-  font-size:15px; padding:13px; border-radius:10px;
+  width:100%; background:var(--chalk-coral); color:#fff; font-weight:700;
+  font-size:15px; padding:13px; border-radius:9px;
+  border:3px solid #000; box-shadow:3px 3px 0 rgba(0,0,0,0.6);
+  text-transform:uppercase; letter-spacing:.03em;
+  transition:transform .1s ease, box-shadow .1s ease;
 }
-.btn-primary:active{ transform:scale(.98); }
+.btn-primary:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(0,0,0,0.6); }
 .btn-ghost{
-  background:transparent; border:1px solid var(--border-dust); color:var(--chalk-dust);
+  background:transparent; border:2px solid var(--chalk-dust); color:var(--chalk-dust);
   font-size:13px; padding:10px 14px; border-radius:8px;
 }
 
@@ -138,7 +141,7 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
 
 /* --- practice --- */
 .stats-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
-.score{ font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:500; color:var(--chalk-yellow); }
+.score{ font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:700; color:var(--comic-green); }
 .score-label{ font-size:11px; color:var(--chalk-dust); letter-spacing:.08em; text-transform:uppercase; }
 .reference-text{ font-size:16px; line-height:2; }
 .word{ color:var(--chalk-dust); transition:color .3s ease; }
@@ -152,7 +155,8 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
 .mic-area{ display:flex; flex-direction:column; align-items:center; margin:20px 0 10px; }
 .mic-btn{
   width:78px; height:78px; border-radius:50%; background:var(--bg-panel-2);
-  border:2px solid var(--chalk-dust); display:flex; align-items:center; justify-content:center; position:relative;
+  border:3px solid #000; box-shadow:3px 3px 0 rgba(0,0,0,0.6);
+  display:flex; align-items:center; justify-content:center; position:relative;
 }
 .mic-btn svg{ width:28px; height:28px; fill:var(--chalk-white); }
 .mic-btn.listening{ border-color:var(--chalk-coral); background:rgba(232,135,122,0.12); }
@@ -298,6 +302,7 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.4/tesseract.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
