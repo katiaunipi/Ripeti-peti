@@ -176,9 +176,44 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
   font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--chalk-dust); margin:0 0 10px;
 }
-.chips{ display:flex; flex-wrap:wrap; gap:8px; }
-.chip{ font-size:13px; padding:6px 11px; border-radius:20px; border:1px solid var(--chalk-coral); color:var(--chalk-coral); }
-.chip.done{ border-color:var(--chalk-yellow); color:var(--chalk-yellow); text-decoration:line-through; opacity:.55; }
+
+/* --- chicche grafiche: pulse sul punteggio --- */
+@keyframes scorePulse{
+  0%{ transform:scale(1); }
+  30%{ transform:scale(1.35); }
+  60%{ transform:scale(0.95); }
+  100%{ transform:scale(1); }
+}
+.score-pulse{ animation:scorePulse .5s ease; }
+
+/* --- shake sul testo alle soglie 25/50/75% --- */
+@keyframes textShake{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-4px) rotate(-0.3deg); }
+  40%{ transform:translateX(4px) rotate(0.3deg); }
+  60%{ transform:translateX(-3px); }
+  80%{ transform:translateX(3px); }
+}
+.text-shake{ animation:textShake .4s ease; }
+
+/* --- POW! a fumetto al 100% --- */
+.pow-burst{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.4) rotate(-8deg);
+  z-index:999;
+  font-family:'Bangers', cursive; font-size:56px; letter-spacing:.04em;
+  color:var(--chalk-yellow);
+  -webkit-text-stroke:2.5px #000;
+  text-shadow:5px 5px 0 #000;
+  pointer-events:none;
+  animation:powPop 1.4s ease forwards;
+}
+@keyframes powPop{
+  0%{ opacity:0; transform:translate(-50%,-50%) scale(0.2) rotate(-15deg); }
+  15%{ opacity:1; transform:translate(-50%,-50%) scale(1.15) rotate(6deg); }
+  30%{ transform:translate(-50%,-50%) scale(1) rotate(-3deg); }
+  80%{ opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+  100%{ opacity:0; transform:translate(-50%,-50%) scale(1.3) rotate(0deg); }
+}
 .actions-row{ display:flex; gap:10px; margin-top:16px; }
 .actions-row button{ flex:1; }
 .notice{
@@ -274,7 +309,7 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
       <div class="stats-row">
         <div>
           <div class="score"><span id="scoreValue">0</span>%</div>
-          <div class="score-label"><span id="coveredCount">0</span>/<span id="totalCount">0</span> concetti detti in questa sessione</div>
+          <div class="score-label"><span id="coveredCount">0</span>/<span id="totalCount">0</span> parole del testo dette in questa sessione</div>
         </div>
       </div>
       <div class="reference-text" id="referenceText"></div>
@@ -288,11 +323,6 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
         <div class="mic-hint" id="micHint">Tocca per iniziare a parlare</div>
       </div>
       <div class="transcript-box" id="transcriptBox">La tua voce apparirà qui mentre parli...</div>
-    </div>
-
-    <div class="panel chip-section">
-      <h3>Concetti da coprire</h3>
-      <div class="chips" id="chipsRow"></div>
     </div>
 
     <div class="actions-row">
@@ -385,7 +415,6 @@ const chapPdf = document.getElementById('chapPdf');
 const pdfStatus = document.getElementById('pdfStatus');
 
 const referenceTextEl = document.getElementById('referenceText');
-const chipsRow = document.getElementById('chipsRow');
 const scoreValue = document.getElementById('scoreValue');
 const coveredCountEl = document.getElementById('coveredCount');
 const totalCountEl = document.getElementById('totalCount');
@@ -404,6 +433,8 @@ function escapeHtml(s){
 }
 
 // --- keyword extraction ---
+// Estrae TUTTE le parole di contenuto del testo (niente articoli, congiunzioni, preposizioni ecc.)
+// senza alcun tetto: rappresentano l'intero testo, non un sottoinsieme.
 function extractKeywords(text){
   const tokens = text.split(/[^A-Za-zÀ-ÿ']+/).filter(Boolean);
   const seen = new Map();
@@ -411,11 +442,11 @@ function extractKeywords(text){
     const norm = normalize(t);
     if(norm.length>=4 && !stopwords.has(norm) && !seen.has(norm)){ seen.set(norm, t); }
   });
-  // tetto alto per non tagliare via i concetti delle pagine successive, ma con un limite
-  // di sicurezza per testi molto lunghi (es. capitoli interi da decine di pagine)
-  const cap = 250;
-  return Array.from(seen.entries()).slice(0, cap).map(([norm, display])=>({norm, display}));
+  return Array.from(seen.entries()).map(([norm, display])=>({norm, display}));
 }
+
+// Radice grezza per tollerare plurali/coniugazioni (es. diritto/diritti/diritta)
+function stem(norm){ return norm.length<=5 ? norm : norm.slice(0,5); }
 
 // =========================
 // SUBJECTS VIEW (home)
@@ -707,8 +738,8 @@ function openPractice(chapterId){
   const c = getCurrentChapter();
   coveredSet = new Set();
   finalTranscript = '';
+  lastMilestoneShown = 0;
   renderReferenceText(c.text);
-  renderChips(c.keywords);
   updateStats(c);
   transcriptBox.textContent = 'La tua voce apparirà qui mentre parli...';
   showView(practiceView);
@@ -723,30 +754,66 @@ function renderReferenceText(text){
   }).join('');
 }
 
-function renderChips(keywords){
-  chipsRow.innerHTML = keywords.map(k=>{
-    const done = coveredSet.has(k.norm);
-    return `<span class="chip ${done?'done':''}">${k.display}</span>`;
-  }).join('');
-}
+let lastScoreShown = 0;
+let lastMilestoneShown = 0;
 
 function updateStats(c){
-  scoreValue.textContent = Math.round(c.score);
+  const rounded = Math.round(c.score);
+  scoreValue.textContent = rounded;
   coveredCountEl.textContent = coveredSet.size;
   totalCountEl.textContent = c.keywords.length;
+
+  // effetto "pulse" ogni volta che la percentuale sale
+  if(rounded > lastScoreShown){
+    scoreValue.parentElement.classList.remove('score-pulse');
+    void scoreValue.parentElement.offsetWidth; // riavvia l'animazione
+    scoreValue.parentElement.classList.add('score-pulse');
+  }
+  lastScoreShown = rounded;
+
+  // shake sul testo al superamento di 25/50/75%
+  const milestones = [25,50,75];
+  const hit = milestones.filter(m=>rounded>=m && lastMilestoneShown<m).pop();
+  if(hit){
+    referenceTextEl.classList.remove('text-shake');
+    void referenceTextEl.offsetWidth;
+    referenceTextEl.classList.add('text-shake');
+    lastMilestoneShown = hit;
+  }
+
+  // POW! al 100%
+  if(rounded>=100 && lastMilestoneShown<100){
+    lastMilestoneShown = 100;
+    showPowBurst();
+  }
+}
+
+function showPowBurst(){
+  const burst = document.createElement('div');
+  burst.className = 'pow-burst';
+  const words = ['POW!','BOOM!','CAPITOLO FATTO!'];
+  burst.textContent = words[Math.floor(Math.random()*words.length)];
+  document.body.appendChild(burst);
+  setTimeout(()=>burst.remove(), 1400);
 }
 
 function updateMatches(transcriptSoFar){
   const c = getCurrentChapter();
   if(!c) return;
-  const normTranscript = ' ' + normalize(transcriptSoFar.replace(/[^A-Za-zÀ-ÿ' ]/g,' ')) + ' ';
+  const transcriptWords = transcriptSoFar
+    .replace(/[^A-Za-zÀ-ÿ' ]/g,' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(normalize)
+    .filter(w=>w.length>=4);
+  const transcriptStems = new Set(transcriptWords.map(stem));
+
   c.keywords.forEach(k=>{
-    if(normTranscript.includes(' '+k.norm) || normTranscript.includes(k.norm+' ')){ coveredSet.add(k.norm); }
+    if(transcriptStems.has(stem(k.norm))){ coveredSet.add(k.norm); }
   });
   document.querySelectorAll('.word').forEach(span=>{
     if(coveredSet.has(span.dataset.norm)) span.classList.add('covered');
   });
-  renderChips(c.keywords);
   const sessionScore = c.keywords.length ? (coveredSet.size/c.keywords.length*100) : 0;
   c.score = Math.max(c.score, sessionScore);
   saveSubjects();
@@ -764,8 +831,9 @@ document.getElementById('retryBtn').addEventListener('click', ()=>{
   const c = getCurrentChapter();
   coveredSet = new Set();
   finalTranscript = '';
+  lastScoreShown = 0;
+  lastMilestoneShown = 0;
   document.querySelectorAll('.word.covered').forEach(s=>s.classList.remove('covered'));
-  renderChips(c.keywords);
   updateStats(c);
   transcriptBox.textContent = 'La tua voce apparirà qui mentre parli...';
 });
