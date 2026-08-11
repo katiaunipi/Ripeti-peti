@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Ripeti per capitoli</title>
+<title>Ripeti per materie</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
@@ -73,21 +73,21 @@ button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
   transition:width .5s ease; width:0%;
 }
 
-/* --- chapter list --- */
-.chapter-card{
+/* --- card comune (materia o capitolo) --- */
+.item-card{
   background:var(--bg-panel-2);
   border:1px solid var(--border-dust);
   border-radius:12px;
   padding:13px 14px;
   margin-bottom:10px;
 }
-.chapter-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-.chapter-title{ font-size:15px; font-weight:600; color:var(--chalk-white); }
-.chapter-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk-dust); margin-top:2px; }
-.chapter-score{ font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--chalk-yellow); white-space:nowrap; }
-.chapter-bar-track{ width:100%; height:6px; border-radius:4px; background:var(--bg-deep); margin-top:9px; overflow:hidden; }
-.chapter-bar-fill{ height:100%; background:var(--chalk-yellow); border-radius:4px; transition:width .4s ease; }
-.chapter-actions{ display:flex; gap:14px; margin-top:10px; }
+.item-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.item-title{ font-size:15px; font-weight:600; color:var(--chalk-white); }
+.item-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk-dust); margin-top:2px; }
+.item-score{ font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--chalk-yellow); white-space:nowrap; }
+.item-bar-track{ width:100%; height:6px; border-radius:4px; background:var(--bg-deep); margin-top:9px; overflow:hidden; }
+.item-bar-fill{ height:100%; background:var(--chalk-yellow); border-radius:4px; transition:width .4s ease; }
+.item-actions{ display:flex; gap:14px; margin-top:10px; flex-wrap:wrap; }
 .icon-btn{
   background:none; display:flex; align-items:center; gap:5px;
   font-size:12px; color:var(--chalk-dust); padding:2px 0;
@@ -97,7 +97,7 @@ button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
 .icon-btn.danger svg{ fill:var(--chalk-coral); }
 .icon-btn.primary{ color:var(--chalk-yellow); }
 .icon-btn.primary svg{ fill:var(--chalk-yellow); }
-.confirm-row{ display:flex; gap:10px; align-items:center; font-size:12px; color:var(--chalk-coral); margin-top:10px; }
+.confirm-row{ display:flex; gap:10px; align-items:center; font-size:12px; color:var(--chalk-coral); margin-top:10px; flex-wrap:wrap; }
 .confirm-row button{ background:none; color:var(--chalk-white); text-decoration:underline; font-size:12px; }
 
 .empty-state{ text-align:center; color:var(--chalk-dust); font-size:13px; padding:18px 8px; }
@@ -127,6 +127,7 @@ textarea{ min-height:140px; line-height:1.5; resize:vertical; }
 input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
 .form-actions{ display:flex; gap:10px; margin-top:16px; }
 .form-actions button{ flex:1; }
+.field-hint{ font-size:12px; color:var(--chalk-dust); margin-top:6px; }
 
 /* --- practice --- */
 .stats-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
@@ -184,15 +185,42 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
 <div class="app">
   <header>
     <div class="eyebrow">Studio a voce alta</div>
-    <h1>Ripeti per capitoli</h1>
+    <h1 id="pageTitle">Le mie materie</h1>
   </header>
 
   <div id="unsupported" class="notice hidden">
     Il riconoscimento vocale non è supportato da questo browser. Prova ad aprire questa pagina con Chrome (Android o desktop).
   </div>
 
-  <!-- HOME VIEW -->
-  <div id="homeView">
+  <!-- SUBJECTS VIEW (home) -->
+  <div id="subjectsView">
+    <div id="subjectList"></div>
+    <button class="btn-primary" id="addSubjectBtn">+ Aggiungi materia</button>
+  </div>
+
+  <!-- SUBJECT FORM VIEW -->
+  <div id="subjectFormView" class="hidden">
+    <button class="back-link" id="subjectFormBackBtn">
+      <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8 1.4-1.4L9.8 12l6.6-6.6z"/></svg> Indietro
+    </button>
+    <div class="panel">
+      <label class="field-label" for="subjName">Nome materia</label>
+      <input type="text" id="subjName" placeholder="Es. Storia, Anatomia, Diritto...">
+      <label class="field-label" for="subjPages">Pagine totali del programma</label>
+      <input type="number" id="subjPages" min="1" placeholder="Es. 240">
+      <div class="field-hint">La percentuale finale sarà calcolata su questo totale, anche se aggiungi i capitoli poco alla volta.</div>
+      <div class="form-actions">
+        <button class="btn-ghost" id="subjectFormCancelBtn">Annulla</button>
+        <button class="btn-primary" id="subjectFormSaveBtn">Salva materia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAPTERS VIEW (dentro una materia) -->
+  <div id="chaptersView" class="hidden">
+    <button class="back-link" id="chaptersBackBtn">
+      <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8 1.4-1.4L9.8 12l6.6-6.6z"/></svg> Tutte le materie
+    </button>
     <div class="panel overall">
       <div class="pct"><span id="overallPct">0</span>%</div>
       <div class="sub" id="overallSub">0 di 0 pagine</div>
@@ -204,24 +232,24 @@ input:focus, textarea:focus{ outline:none; border-color:var(--chalk-yellow); }
     <button class="btn-primary" id="addChapterBtn">+ Aggiungi capitolo</button>
   </div>
 
-  <!-- FORM VIEW -->
-  <div id="formView" class="hidden">
-    <button class="back-link" id="formBackBtn">
+  <!-- CHAPTER FORM VIEW -->
+  <div id="chapterFormView" class="hidden">
+    <button class="back-link" id="chapterFormBackBtn">
       <svg viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8 1.4-1.4L9.8 12l6.6-6.6z"/></svg> Indietro
     </button>
     <div class="panel">
       <label class="field-label" for="chapTitle">Titolo capitolo</label>
       <input type="text" id="chapTitle" placeholder="Es. Capitolo 1 – La cellula">
-      <label class="field-label" for="chapPages">Numero di pagine</label>
+      <label class="field-label" for="chapPages">Numero di pagine di questo capitolo</label>
       <input type="number" id="chapPages" min="1" placeholder="Es. 12">
       <label class="field-label" for="chapText">Testo o appunti dell'argomento</label>
       <textarea id="chapText" placeholder="Incolla qui gli appunti del capitolo..."></textarea>
       <label class="field-label" for="chapPdf">Oppure carica un PDF</label>
       <input type="file" id="chapPdf" accept="application/pdf">
-      <div id="pdfStatus" style="font-size:12px;color:var(--chalk-dust);margin-top:6px;"></div>
+      <div id="pdfStatus" class="field-hint"></div>
       <div class="form-actions">
-        <button class="btn-ghost" id="formCancelBtn">Annulla</button>
-        <button class="btn-primary" id="formSaveBtn">Salva capitolo</button>
+        <button class="btn-ghost" id="chapterFormCancelBtn">Annulla</button>
+        <button class="btn-primary" id="chapterFormSaveBtn">Salva capitolo</button>
       </div>
     </div>
   </div>
@@ -272,51 +300,78 @@ const stopwords = new Set(stopwordsList);
 function normalize(w){
   return w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z']/g,'');
 }
-function uid(){ return 'c'+Date.now()+Math.random().toString(36).slice(2,7); }
+function uid(prefix){ return prefix+Date.now()+Math.random().toString(36).slice(2,7); }
 
-const STORAGE_KEY = 'ripeti-capitoli-v1';
+const STORAGE_KEY = 'ripeti-materie-v1';
+const OLD_STORAGE_KEY = 'ripeti-capitoli-v1'; // versione precedente senza materie
 let storageAvailable = true;
 
-function saveChapters(){
+function saveSubjects(){
   if(!storageAvailable) return;
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chapters));
-  }catch(e){
-    storageAvailable = false;
-  }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(subjects)); }
+  catch(e){ storageAvailable = false; }
 }
 
-function loadChapters(){
+function loadSubjects(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) chapters = JSON.parse(raw);
-  }catch(e){
-    storageAvailable = false;
-  }
+    if(raw){ subjects = JSON.parse(raw); return; }
+    // migrazione dalla vecchia versione senza materie
+    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+    if(oldRaw){
+      const oldChapters = JSON.parse(oldRaw);
+      if(Array.isArray(oldChapters) && oldChapters.length){
+        const totalPages = oldChapters.reduce((s,c)=>s+c.pages,0);
+        subjects = [{ id: uid('s'), name:'Materia importata', totalPages, chapters: oldChapters }];
+        saveSubjects();
+      }
+    }
+  }catch(e){ storageAvailable = false; }
 }
 
 // --- state ---
-let chapters = []; // {id, title, pages, text, score, keywords:[{norm,display}]}
-let currentChapterId = null; // being practiced
-let editingChapterId = null; // being edited in form, null = new
-let confirmDeleteId = null;
+let subjects = []; // {id, name, totalPages, chapters:[{id,title,pages,text,score,keywords}]}
+let currentSubjectId = null;
+let editingSubjectId = null;
+let currentChapterId = null;
+let editingChapterId = null;
+let confirmDeleteSubjectId = null;
+let confirmDeleteChapterId = null;
 
 let coveredSet = new Set();
 let finalTranscript = '';
 let recognition = null;
 let listening = false;
 
+function getCurrentSubject(){ return subjects.find(s=>s.id===currentSubjectId); }
+function getCurrentChapter(){
+  const s = getCurrentSubject();
+  return s ? s.chapters.find(c=>c.id===currentChapterId) : null;
+}
+
 // --- elements ---
-const homeView = document.getElementById('homeView');
-const formView = document.getElementById('formView');
+const subjectsView = document.getElementById('subjectsView');
+const subjectFormView = document.getElementById('subjectFormView');
+const chaptersView = document.getElementById('chaptersView');
+const chapterFormView = document.getElementById('chapterFormView');
 const practiceView = document.getElementById('practiceView');
+const pageTitle = document.getElementById('pageTitle');
+
+const subjectList = document.getElementById('subjectList');
+const subjName = document.getElementById('subjName');
+const subjPages = document.getElementById('subjPages');
+
 const chapterList = document.getElementById('chapterList');
 const overallPct = document.getElementById('overallPct');
 const overallSub = document.getElementById('overallSub');
 const overallBar = document.getElementById('overallBar');
+
 const chapTitle = document.getElementById('chapTitle');
 const chapPages = document.getElementById('chapPages');
 const chapText = document.getElementById('chapText');
+const chapPdf = document.getElementById('chapPdf');
+const pdfStatus = document.getElementById('pdfStatus');
+
 const referenceTextEl = document.getElementById('referenceText');
 const chipsRow = document.getElementById('chipsRow');
 const scoreValue = document.getElementById('scoreValue');
@@ -328,10 +383,12 @@ const micHint = document.getElementById('micHint');
 const unsupportedNotice = document.getElementById('unsupported');
 
 function showView(view){
-  homeView.classList.add('hidden');
-  formView.classList.add('hidden');
-  practiceView.classList.add('hidden');
+  [subjectsView, subjectFormView, chaptersView, chapterFormView, practiceView].forEach(v=>v.classList.add('hidden'));
   view.classList.remove('hidden');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 // --- keyword extraction ---
@@ -340,41 +397,150 @@ function extractKeywords(text){
   const seen = new Map();
   tokens.forEach(t=>{
     const norm = normalize(t);
-    if(norm.length>=4 && !stopwords.has(norm) && !seen.has(norm)){
-      seen.set(norm, t);
-    }
+    if(norm.length>=4 && !stopwords.has(norm) && !seen.has(norm)){ seen.set(norm, t); }
   });
   return Array.from(seen.entries()).slice(0,30).map(([norm, display])=>({norm, display}));
 }
 
-// --- home / overall progress ---
-function renderHome(){
-  const totalPages = chapters.reduce((s,c)=>s+c.pages,0);
-  const weightedDone = chapters.reduce((s,c)=>s+c.pages*(c.score/100),0);
-  const pct = totalPages>0 ? Math.round(weightedDone/totalPages*100) : 0;
+// =========================
+// SUBJECTS VIEW (home)
+// =========================
+function renderSubjects(){
+  pageTitle.textContent = 'Le mie materie';
+  if(subjects.length===0){
+    subjectList.innerHTML = '<div class="empty-state">Nessuna materia ancora. Aggiungine una per iniziare — ti chiederò il numero totale di pagine del programma.</div>';
+    return;
+  }
+  subjectList.innerHTML = subjects.map(s=>{
+    const assignedPages = s.chapters.reduce((sum,c)=>sum+c.pages,0);
+    const weightedDone = s.chapters.reduce((sum,c)=>sum+c.pages*(c.score/100),0);
+    const pct = s.totalPages>0 ? Math.round(weightedDone/s.totalPages*100) : 0;
+    const confirming = confirmDeleteSubjectId===s.id;
+    return `
+    <div class="item-card">
+      <div class="item-top">
+        <div>
+          <div class="item-title">${escapeHtml(s.name)}</div>
+          <div class="item-meta">${assignedPages} di ${s.totalPages} pagine caricate</div>
+        </div>
+        <div class="item-score">${pct}%</div>
+      </div>
+      <div class="item-bar-track"><div class="item-bar-fill" style="width:${pct}%"></div></div>
+      ${confirming ? `
+        <div class="confirm-row">
+          Eliminare questa materia e tutti i suoi capitoli?
+          <button data-action="delete-confirm" data-id="${s.id}">Sì, elimina</button>
+          <button data-action="delete-cancel" data-id="${s.id}">Annulla</button>
+        </div>
+      ` : `
+        <div class="item-actions">
+          <button class="icon-btn primary" data-action="open" data-id="${s.id}">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 7h16v2H4zm0 7h16v2H4z"/></svg>
+            Vedi capitoli
+          </button>
+          <button class="icon-btn" data-action="edit" data-id="${s.id}">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            Modifica
+          </button>
+          <button class="icon-btn danger" data-action="delete" data-id="${s.id}">
+            <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7L6 7zm3-3h6l1 2H8l1-2z"/></svg>
+            Elimina
+          </button>
+        </div>
+      `}
+    </div>`;
+  }).join('');
+}
+
+subjectList.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if(action==='open'){ openChapters(id); }
+  else if(action==='edit'){ openSubjectForm(id); }
+  else if(action==='delete'){ confirmDeleteSubjectId = id; renderSubjects(); }
+  else if(action==='delete-cancel'){ confirmDeleteSubjectId = null; renderSubjects(); }
+  else if(action==='delete-confirm'){
+    subjects = subjects.filter(s=>s.id!==id);
+    confirmDeleteSubjectId = null;
+    saveSubjects();
+    renderSubjects();
+  }
+});
+
+// --- subject form ---
+function openSubjectForm(id){
+  editingSubjectId = id || null;
+  if(id){
+    const s = subjects.find(s=>s.id===id);
+    subjName.value = s.name;
+    subjPages.value = s.totalPages;
+  } else {
+    subjName.value = '';
+    subjPages.value = '';
+  }
+  showView(subjectFormView);
+}
+
+document.getElementById('addSubjectBtn').addEventListener('click', ()=>openSubjectForm(null));
+document.getElementById('subjectFormBackBtn').addEventListener('click', ()=>{ showView(subjectsView); renderSubjects(); });
+document.getElementById('subjectFormCancelBtn').addEventListener('click', ()=>{ showView(subjectsView); renderSubjects(); });
+
+document.getElementById('subjectFormSaveBtn').addEventListener('click', ()=>{
+  const name = subjName.value.trim();
+  const totalPages = parseInt(subjPages.value, 10);
+  if(!name || !totalPages || totalPages<1) return;
+
+  if(editingSubjectId){
+    const s = subjects.find(s=>s.id===editingSubjectId);
+    s.name = name; s.totalPages = totalPages;
+  } else {
+    subjects.push({ id: uid('s'), name, totalPages, chapters: [] });
+  }
+  saveSubjects();
+  showView(subjectsView);
+  renderSubjects();
+});
+
+// =========================
+// CHAPTERS VIEW (dentro una materia)
+// =========================
+function openChapters(subjectId){
+  currentSubjectId = subjectId;
+  confirmDeleteChapterId = null;
+  renderChapters();
+  showView(chaptersView);
+}
+
+function renderChapters(){
+  const s = getCurrentSubject();
+  if(!s) return;
+  pageTitle.textContent = s.name;
+  const assignedPages = s.chapters.reduce((sum,c)=>sum+c.pages,0);
+  const weightedDone = s.chapters.reduce((sum,c)=>sum+c.pages*(c.score/100),0);
+  const pct = s.totalPages>0 ? Math.round(weightedDone/s.totalPages*100) : 0;
   overallPct.textContent = pct;
-  overallSub.textContent = totalPages>0
-    ? `${Math.round(weightedDone)} di ${totalPages} pagine (proporzionale)`
-    : 'Aggiungi il primo capitolo per iniziare';
+  overallSub.textContent = `${Math.round(weightedDone)} di ${s.totalPages} pagine totali`;
   overallBar.style.width = pct+'%';
 
-  if(chapters.length===0){
-    chapterList.innerHTML = '<div class="empty-state">Nessun capitolo ancora. Aggiungine uno per cominciare a ripetere.</div>';
+  if(s.chapters.length===0){
+    chapterList.innerHTML = '<div class="empty-state">Nessun capitolo ancora in questa materia. Aggiungine uno per iniziare a ripetere.</div>';
     return;
   }
 
-  chapterList.innerHTML = chapters.map(c=>{
-    const confirming = confirmDeleteId===c.id;
+  chapterList.innerHTML = s.chapters.map(c=>{
+    const confirming = confirmDeleteChapterId===c.id;
     return `
-    <div class="chapter-card">
-      <div class="chapter-top">
+    <div class="item-card">
+      <div class="item-top">
         <div>
-          <div class="chapter-title">${escapeHtml(c.title)}</div>
-          <div class="chapter-meta">${c.pages} pagine</div>
+          <div class="item-title">${escapeHtml(c.title)}</div>
+          <div class="item-meta">${c.pages} pagine</div>
         </div>
-        <div class="chapter-score">${Math.round(c.score)}%</div>
+        <div class="item-score">${Math.round(c.score)}%</div>
       </div>
-      <div class="chapter-bar-track"><div class="chapter-bar-fill" style="width:${c.score}%"></div></div>
+      <div class="item-bar-track"><div class="item-bar-fill" style="width:${c.score}%"></div></div>
       ${confirming ? `
         <div class="confirm-row">
           Eliminare questo capitolo?
@@ -382,7 +548,7 @@ function renderHome(){
           <button data-action="delete-cancel" data-id="${c.id}">Annulla</button>
         </div>
       ` : `
-        <div class="chapter-actions">
+        <div class="item-actions">
           <button class="icon-btn primary" data-action="practice" data-id="${c.id}">
             <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z"/><path d="M19 11a1 1 0 00-2 0 5 5 0 01-10 0 1 1 0 00-2 0 7 7 0 006 6.92V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-2.08A7 7 0 0019 11z"/></svg>
             Ripeti
@@ -401,9 +567,11 @@ function renderHome(){
   }).join('');
 }
 
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
+document.getElementById('chaptersBackBtn').addEventListener('click', ()=>{
+  currentSubjectId = null;
+  showView(subjectsView);
+  renderSubjects();
+});
 
 chapterList.addEventListener('click', (e)=>{
   const btn = e.target.closest('button[data-action]');
@@ -411,24 +579,26 @@ chapterList.addEventListener('click', (e)=>{
   const id = btn.dataset.id;
   const action = btn.dataset.action;
   if(action==='practice'){ openPractice(id); }
-  else if(action==='edit'){ openForm(id); }
-  else if(action==='delete'){ confirmDeleteId = id; renderHome(); }
-  else if(action==='delete-cancel'){ confirmDeleteId = null; renderHome(); }
+  else if(action==='edit'){ openChapterForm(id); }
+  else if(action==='delete'){ confirmDeleteChapterId = id; renderChapters(); }
+  else if(action==='delete-cancel'){ confirmDeleteChapterId = null; renderChapters(); }
   else if(action==='delete-confirm'){
-    chapters = chapters.filter(c=>c.id!==id);
-    confirmDeleteId = null;
-    saveChapters();
-    renderHome();
+    const s = getCurrentSubject();
+    s.chapters = s.chapters.filter(c=>c.id!==id);
+    confirmDeleteChapterId = null;
+    saveSubjects();
+    renderChapters();
   }
 });
 
-// --- form ---
-function openForm(id){
+// --- chapter form ---
+function openChapterForm(id){
   editingChapterId = id || null;
-  document.getElementById('chapPdf').value = '';
-  document.getElementById('pdfStatus').textContent = '';
+  chapPdf.value = '';
+  pdfStatus.textContent = '';
   if(id){
-    const c = chapters.find(c=>c.id===id);
+    const s = getCurrentSubject();
+    const c = s.chapters.find(c=>c.id===id);
     chapTitle.value = c.title;
     chapPages.value = c.pages;
     chapText.value = c.text;
@@ -437,16 +607,15 @@ function openForm(id){
     chapPages.value = '';
     chapText.value = '';
   }
-  showView(formView);
+  showView(chapterFormView);
 }
 
-document.getElementById('addChapterBtn').addEventListener('click', ()=>openForm(null));
-document.getElementById('formBackBtn').addEventListener('click', ()=>{ showView(homeView); renderHome(); });
-document.getElementById('formCancelBtn').addEventListener('click', ()=>{ showView(homeView); renderHome(); });
+document.getElementById('addChapterBtn').addEventListener('click', ()=>openChapterForm(null));
+document.getElementById('chapterFormBackBtn').addEventListener('click', ()=>{ showView(chaptersView); renderChapters(); });
+document.getElementById('chapterFormCancelBtn').addEventListener('click', ()=>{ showView(chaptersView); renderChapters(); });
 
-document.getElementById('chapPdf').addEventListener('change', async (e)=>{
+chapPdf.addEventListener('change', async (e)=>{
   const file = e.target.files[0];
-  const pdfStatus = document.getElementById('pdfStatus');
   if(!file) return;
   pdfStatus.textContent = 'Estrazione testo in corso...';
   try{
@@ -462,35 +631,38 @@ document.getElementById('chapPdf').addEventListener('change', async (e)=>{
     if(!chapPages.value) chapPages.value = pdf.numPages;
     pdfStatus.textContent = `Estratte ${pdf.numPages} pagine dal PDF. Puoi ancora modificare il testo qui sopra.`;
   }catch(err){
-    pdfStatus.textContent = 'Errore nell\'estrazione del PDF. Prova a incollare il testo manualmente.';
+    pdfStatus.textContent = "Errore nell'estrazione del PDF. Prova a incollare il testo manualmente.";
   }
 });
 
-document.getElementById('formSaveBtn').addEventListener('click', ()=>{
+document.getElementById('chapterFormSaveBtn').addEventListener('click', ()=>{
   const title = chapTitle.value.trim();
   const pages = parseInt(chapPages.value, 10);
   const text = chapText.value.trim();
   if(!title || !pages || pages<1 || !text) return;
 
+  const s = getCurrentSubject();
   if(editingChapterId){
-    const c = chapters.find(c=>c.id===editingChapterId);
+    const c = s.chapters.find(c=>c.id===editingChapterId);
     c.title = title; c.pages = pages; c.text = text;
     c.keywords = extractKeywords(text);
   } else {
-    chapters.push({ id: uid(), title, pages, text, score:0, keywords: extractKeywords(text) });
+    s.chapters.push({ id: uid('c'), title, pages, text, score:0, keywords: extractKeywords(text) });
   }
-  saveChapters();
-  showView(homeView);
-  renderHome();
+  saveSubjects();
+  showView(chaptersView);
+  renderChapters();
 });
 
-// --- practice ---
-function openPractice(id){
-  currentChapterId = id;
-  const c = chapters.find(c=>c.id===id);
+// =========================
+// PRACTICE VIEW
+// =========================
+function openPractice(chapterId){
+  currentChapterId = chapterId;
+  const c = getCurrentChapter();
   coveredSet = new Set();
   finalTranscript = '';
-  renderReferenceText(c.text, c.keywords);
+  renderReferenceText(c.text);
   renderChips(c.keywords);
   updateStats(c);
   transcriptBox.textContent = 'La tua voce apparirà qui mentre parli...';
@@ -520,33 +692,31 @@ function updateStats(c){
 }
 
 function updateMatches(transcriptSoFar){
-  const c = chapters.find(c=>c.id===currentChapterId);
+  const c = getCurrentChapter();
   if(!c) return;
   const normTranscript = ' ' + normalize(transcriptSoFar.replace(/[^A-Za-zÀ-ÿ' ]/g,' ')) + ' ';
   c.keywords.forEach(k=>{
-    if(normTranscript.includes(' '+k.norm) || normTranscript.includes(k.norm+' ')){
-      coveredSet.add(k.norm);
-    }
+    if(normTranscript.includes(' '+k.norm) || normTranscript.includes(k.norm+' ')){ coveredSet.add(k.norm); }
   });
   document.querySelectorAll('.word').forEach(span=>{
     if(coveredSet.has(span.dataset.norm)) span.classList.add('covered');
   });
   renderChips(c.keywords);
   const sessionScore = c.keywords.length ? (coveredSet.size/c.keywords.length*100) : 0;
-  c.score = Math.max(c.score, sessionScore); // il capitolo tiene il punteggio migliore ottenuto
-  saveChapters();
+  c.score = Math.max(c.score, sessionScore);
+  saveSubjects();
   updateStats(c);
 }
 
 document.getElementById('practiceBackBtn').addEventListener('click', ()=>{
   stopListening();
-  showView(homeView);
-  renderHome();
+  showView(chaptersView);
+  renderChapters();
 });
 
 document.getElementById('retryBtn').addEventListener('click', ()=>{
   stopListening();
-  const c = chapters.find(c=>c.id===currentChapterId);
+  const c = getCurrentChapter();
   coveredSet = new Set();
   finalTranscript = '';
   document.querySelectorAll('.word.covered').forEach(s=>s.classList.remove('covered'));
@@ -582,9 +752,7 @@ function setupRecognition(){
     }
   };
 
-  recognition.onend = ()=>{
-    if(listening){ try{ recognition.start(); }catch(e){} }
-  };
+  recognition.onend = ()=>{ if(listening){ try{ recognition.start(); }catch(e){} } };
 }
 
 function startListening(){
@@ -612,8 +780,8 @@ if(!SpeechRecognition){
   micBtn.disabled = true;
 }
 
-loadChapters();
-renderHome();
+loadSubjects();
+renderSubjects();
 </script>
 </body>
 </html>
