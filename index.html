@@ -5,25 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ripeti per materie</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
 
 :root{
-  --bg-deep:#1B2E24;
-  --bg-panel:#213827;
-  --bg-panel-2:#26402C;
-  --chalk-white:#F1EDE4;
-  --chalk-yellow:#F2C94C;
-  --chalk-coral:#E8877A;
-  --chalk-dust:#8FA998;
-  --border-dust: rgba(241,237,228,0.14);
+  --bg-deep:#101114;
+  --bg-panel:#1B2036;
+  --bg-panel-2:#232A47;
+  --chalk-white:#F4F1E8;
+  --chalk-yellow:#F5B921;
+  --chalk-coral:#E8363B;
+  --chalk-dust:#8791B5;
+  --border-dust:#000000;
+  --comic-green:#4FC96B;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
   min-height:100vh;
   background:
-    radial-gradient(ellipse at 20% -10%, rgba(255,255,255,0.05), transparent 40%),
-    radial-gradient(ellipse at 90% 110%, rgba(255,255,255,0.04), transparent 45%),
+    radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1.4px) 0 0/14px 14px,
+    radial-gradient(ellipse at 20% -10%, rgba(232,54,59,0.10), transparent 40%),
+    radial-gradient(ellipse at 90% 110%, rgba(79,201,107,0.08), transparent 45%),
     var(--bg-deep);
   font-family:'IBM Plex Sans', sans-serif;
   color:var(--chalk-white);
@@ -41,18 +43,22 @@ header .eyebrow{
   color:var(--chalk-dust); margin-bottom:6px;
 }
 header h1{
-  font-family:'Caveat', cursive; font-weight:700; font-size:40px;
-  margin:0; color:var(--chalk-white); line-height:1;
+  font-family:'Bangers', cursive; font-weight:400; font-size:48px;
+  margin:0; color:var(--chalk-yellow); line-height:1;
+  letter-spacing:.03em;
+  -webkit-text-stroke:1.5px #000;
+  text-shadow:3px 3px 0 #000;
 }
 
 button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
 
 .panel{
   background:var(--bg-panel);
-  border:1px solid var(--border-dust);
-  border-radius:14px;
+  border:3px solid var(--border-dust);
+  border-radius:10px;
   padding:18px;
-  margin-bottom:14px;
+  margin-bottom:16px;
+  box-shadow:4px 4px 0 rgba(0,0,0,0.6);
 }
 
 /* --- overall progress --- */
@@ -69,24 +75,25 @@ button{ font-family:'IBM Plex Sans', sans-serif; cursor:pointer; border:none; }
   margin-top:12px; overflow:hidden;
 }
 .bar-fill{
-  height:100%; background:var(--chalk-yellow); border-radius:6px;
+  height:100%; background:var(--comic-green); border-radius:6px;
   transition:width .5s ease; width:0%;
 }
 
 /* --- card comune (materia o capitolo) --- */
 .item-card{
   background:var(--bg-panel-2);
-  border:1px solid var(--border-dust);
-  border-radius:12px;
+  border:3px solid var(--border-dust);
+  border-radius:10px;
   padding:13px 14px;
-  margin-bottom:10px;
+  margin-bottom:12px;
+  box-shadow:3px 3px 0 rgba(0,0,0,0.6);
 }
 .item-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
 .item-title{ font-size:15px; font-weight:600; color:var(--chalk-white); }
 .item-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk-dust); margin-top:2px; }
 .item-score{ font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--chalk-yellow); white-space:nowrap; }
 .item-bar-track{ width:100%; height:6px; border-radius:4px; background:var(--bg-deep); margin-top:9px; overflow:hidden; }
-.item-bar-fill{ height:100%; background:var(--chalk-yellow); border-radius:4px; transition:width .4s ease; }
+.item-bar-fill{ height:100%; background:var(--comic-green); border-radius:4px; transition:width .4s ease; }
 .item-actions{ display:flex; gap:14px; margin-top:10px; flex-wrap:wrap; }
 .icon-btn{
   background:none; display:flex; align-items:center; gap:5px;
