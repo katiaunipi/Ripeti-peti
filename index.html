@@ -411,7 +411,10 @@ function extractKeywords(text){
     const norm = normalize(t);
     if(norm.length>=4 && !stopwords.has(norm) && !seen.has(norm)){ seen.set(norm, t); }
   });
-  return Array.from(seen.entries()).slice(0,30).map(([norm, display])=>({norm, display}));
+  // tetto alto per non tagliare via i concetti delle pagine successive, ma con un limite
+  // di sicurezza per testi molto lunghi (es. capitoli interi da decine di pagine)
+  const cap = 250;
+  return Array.from(seen.entries()).slice(0, cap).map(([norm, display])=>({norm, display}));
 }
 
 // =========================
